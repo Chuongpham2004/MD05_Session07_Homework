@@ -1,51 +1,23 @@
-name: Payment Service CI
+name: Restaurant Service CI
 on:
   push:
     branches:
       - main
 jobs:
-  # Giai đoạn 1: chạy Unit Test
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Setup Java JDK 21
-        uses: actions/setup-java@v6
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Run Unit Tests
-        run: |
-          chmod +x ./gradlew
-          ./gradlew test
-
-  # Giai đoạn 2: chỉ chạy khi job test thành công
   build:
-    needs: test
-    runs-on: ubuntu-latest
+    # Chạy trên runner có CẢ HAI nhãn: self-hosted VÀ quickbite-runner
+    runs-on: [self-hosted, quickbite-runner]
     steps:
-      # Job Isolation: mỗi job chạy trên một runner mới, trống trơn,
-      # nên phải checkout lại code và setup lại Java.
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Setup Java JDK 21
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v6
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Jar
+      - name: Build with Gradle
         run: |
           chmod +x ./gradlew
           ./gradlew bootJar
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: payment-service-artifact
-          path: build/libs/
-          retention-days: 3

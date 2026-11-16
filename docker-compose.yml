@@ -1,0 +1,21 @@
+services:
+  github-runner:
+    image: myoung34/github-runner:latest
+    container_name: quickbite-runner
+    restart: unless-stopped
+    environment:
+      # 1. Runner thuộc về repo nào
+      RUNNER_SCOPE: repo
+      REPO_URL: https://github.com/Chuongpham2004/MD05_Session07_Homework
+      # 2. Xác thực: token lấy từ file .env
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      # 3. Định danh runner
+      RUNNER_NAME: quickbite-runner-01
+      LABELS: quickbite-runner
+      # 4. Thư mục làm việc của runner
+      RUNNER_WORKDIR: /tmp/runner/work
+    volumes:
+      # Cho runner điều khiển Docker của máy host
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Thư mục làm việc tạm (dùng chung đường dẫn giữa host và container)
+      - /tmp/runner:/tmp/runner
