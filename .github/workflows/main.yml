@@ -1,0 +1,110 @@
+name: Order Service CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # ───────────── Nhóm 1: hai job chạy SONG SONG (không có needs) ─────────────
+
+  code-quality:
+    name: Code Quality (Checkstyle)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run Checkstyle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew checkstyleMain checkstyleTest
+
+  unit-test:
+    name: Unit Test (PostgreSQL)
+    runs-on: ubuntu-latest
+
+    # Service container: GitHub khởi động PostgreSQL trước khi chạy các step
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orderdb
+        ports:
+          # Job chạy trực tiếp trên runner nên truy cập qua localhost:5432
+          - 5432:5432
+        # Chờ PostgreSQL sẵn sàng (healthy) rồi mới chạy các step
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run Unit Tests
+        env:
+          # Spring Boot tự map các biến môi trường này vào spring.datasource.*
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/orderdb
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: build/reports/tests/test/
+          retention-days: 7
+
+  # ───────────── Nhóm 2: chỉ chạy khi CẢ HAI job trên thành công ─────────────
+
+  build:
+    name: Build & Package JAR
+    needs: [code-quality, unit-test]
+    runs-on: ubuntu-latest
+    steps:
+      # Job Isolation: runner mới hoàn toàn → phải checkout + setup Java lại
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build Jar
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bootJar
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: order-service-artifact
+          path: build/libs/*.jar
+          retention-days: 7

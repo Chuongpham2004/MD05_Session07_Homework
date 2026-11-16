@@ -1,3 +1,13 @@
 spring:
   application:
     name: MD05_Session07_Homework
+  datasource:
+    # Giá trị mặc định cho môi trường local.
+    # Trên CI được ghi đè bằng biến môi trường SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD.
+    url: jdbc:postgresql://localhost:5432/orderdb
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
