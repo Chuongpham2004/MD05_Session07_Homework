@@ -17,5 +17,9 @@ services:
     volumes:
       # Cho runner điều khiển Docker của máy host
       - /var/run/docker.sock:/var/run/docker.sock
-      # Thư mục làm việc tạm (dùng chung đường dẫn giữa host và container)
-      - /tmp/runner:/tmp/runner
+      # Thư mục làm việc tạm: dùng named volume do Docker quản lý
+      # (không dùng /tmp của host vì Docker Desktop mount nó với cờ noexec)
+      - runner-work:/tmp/runner
+
+volumes:
+  runner-work:
