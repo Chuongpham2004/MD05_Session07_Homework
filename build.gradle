@@ -10,7 +10,7 @@ description = 'MD05_Session07_Homework'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

@@ -8,6 +8,7 @@ class Md05Session07HomeworkApplicationTests {
 
     @Test
     void contextLoads() {
+        org.junit.jupiter.api.Assertions.fail("Cố tình làm fail để kiểm chứng job build bị skip");
     }
 
 }
